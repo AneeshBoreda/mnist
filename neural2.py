@@ -94,19 +94,41 @@ def test(neuralnet, testing_data,labels):
 
         #get output for each data_point
         #compare output to ground truth
-epochs=5
-learning_rate=0.005
+epochs=2
+learning_rate=0.01
 
 layers=[28*28,512,10]
 #layers=[3,4,5,2]
 n = NeuralNetwork(layers)
 #train(n,epochs,np.array([[3,2,0],[1,2,4]]),np.array([1,0]),learning_rate)
 start=time.time()
-train_data=np.loadtxt('train.csv',delimiter=',')
+#train_data=np.loadtxt('train.csv',delimiter=',')
+
+def iter_loadtxt(filename, delimiter=',', skiprows=0, dtype=float):
+    def iter_func():
+        with open(filename, 'r') as infile:
+            for _ in range(skiprows):
+                next(infile)
+            for line in infile:
+                line = line.rstrip().split(delimiter)
+                line = [float(x)/128-1 for x in line]
+                for item in line:
+                    yield dtype(item)
+        iter_loadtxt.rowlength = len(line)
+
+    data = np.fromiter(iter_func(), dtype=dtype)
+    data = data.reshape((-1, iter_loadtxt.rowlength))
+    return data
+
+#generate_text_file()
+train_data = iter_loadtxt('train.csv')
+
 loadtrain=time.time()
 #print (train_data.shape)
 print('Time to load train:',loadtrain-start)
-train(n,epochs,train_data[:,1:]/128-1,train_data[:,0],learning_rate)
+train_labels=train_data[:,0]/128-1
+train_cols=train_data[:,1:]
+train(n,epochs,train_cols,train_labels,learning_rate)
 train=time.time()
 print('Time to train:',train-loadtrain)
 test_data=np.loadtxt('test.csv',delimiter=',',skiprows=1)
